@@ -3,7 +3,6 @@ import {Menu} from "lucide-react";
 import {GeneralSection} from "./GeneralSection.jsx";
 import {ProjectSection} from "./ProjectSection.jsx";
 import {ThemeController} from "../ThemeController.jsx";
-import {useState} from "react";
 
 export function Sidebar() {
     return (

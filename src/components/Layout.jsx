@@ -1,22 +1,18 @@
-import {Sidebar} from "./Sidebar/Sidebar.jsx";
-import {Main} from "./Main.jsx";
+import {Sidebar} from "./sidebar/Sidebar.jsx";
+import {MainContent} from "./main-content/MainContent.jsx";
 import {createContext, useState} from "react";
-
-const SetTabContext = createContext(null);
-const TabContext = createContext(null);
+import {TabContext} from "../context/TabContext.jsx";
+import {ProjectContext} from "../context/ProjectContext.jsx";
 
 export function Layout() {
-    const [selectedTab, setSelectedTab] = useState(null);
-
     return (
-        <div className="grid h-full flex-1" style={{gridTemplateColumns: "auto 10fr"}}>
-            <TabContext value={selectedTab}>
-                <SetTabContext value={setSelectedTab}>
-                    <Sidebar />
-                </SetTabContext>
-                <Main />
+        <div className="grid h-full flex-1 gap-8 grid-cols-[auto_10fr]">
+            <TabContext>
+                <ProjectContext>
+                    <Sidebar/>
+                    <MainContent />
+                </ProjectContext>
             </TabContext>
-
         </div>
     )
 }
