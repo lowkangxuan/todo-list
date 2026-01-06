@@ -8,7 +8,7 @@ import {TaskButton} from "./TaskButton.jsx";
 
 export function ProjectContent({id}) {
     const setActiveTab = useSetActiveTab();
-    const {projects, dispatch} = useProject();
+    const {projects, dispatch, completeTask} = useProject();
 
     const currProject = projects[id];
     const numOfTasks = Object.entries(currProject.tasks).length;
@@ -140,8 +140,9 @@ export function ProjectContent({id}) {
                             : Object.values(currProject.tasks).map((task) => (
                                 <TaskButton key={task.id}
                                             data={task}
+                                            projectName={currProject.name}
                                             onClick={() => startTaskEdit(task.id)}
-                                            onCheck={(e) => handleTaskCompletion(e, task.id)}
+                                            onCheck={(e) => completeTask(id, task.id, e.target.checked)}
                                 >
                                     {task.name}
                                 </TaskButton>

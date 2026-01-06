@@ -27,7 +27,7 @@ function projectReducer(projects, action) {
             id: crypto.randomUUID(),
             name: "Task",
             description: "",
-            dueDate: "",
+            dueDate: format(new Date(), "yyyy-MM-dd"),
             isCompleted: false,
         }
     }
@@ -157,7 +157,7 @@ export function ProjectContext({children}) {
     }
 
     return (
-        <ProjectProvider value={{projects, dispatch}}>
+        <ProjectProvider value={{projects, dispatch, completeTask}}>
             {children}
         </ProjectProvider>
     )

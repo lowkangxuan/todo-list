@@ -1,13 +1,23 @@
 import {createContext, useContext} from "react";
 import {useProject} from "./ProjectContext.jsx";
-import {isThisWeek, isToday, isTomorrow, parseISO} from "date-fns";
+import {isBefore, isThisWeek, isToday, isTomorrow, parseISO} from "date-fns";
 
 const TaskViewProvider = createContext(null);
 
 function getAllTasks(projects) {
     return Object.values(projects).flatMap(project =>
-        Object.values(project.tasks)
+        Object.values(project.tasks).map(task => ({
+            ...task,
+            projectID: project.id,
+            projectName: project.name,
+        }))
     );
+}
+
+function getOverdueTasks(allTasks) {
+    return allTasks.filter(task => {
+        return task.dueDate && isBefore(parseISO(task.dueDate), new Date());
+    })
 }
 
 function getTodayTasks(allTasks) {
@@ -37,6 +47,7 @@ function getThisWeekTasks(allTasks) {
 export function TaskViewContext({children}) {
     const {projects} = useProject();
     const allTasks = getAllTasks(projects);
+    const overdueTasks = getOverdueTasks(allTasks);
     const todayTasks = getTodayTasks(allTasks);
     const tomorrowTasks = getTomorrowTasks(allTasks);
     const thisWeekTasks = getThisWeekTasks(allTasks);
@@ -45,11 +56,13 @@ export function TaskViewContext({children}) {
     return (
         <TaskViewProvider value={{
             tasks: {
+                overdue: overdueTasks,
                 today: todayTasks,
                 tomorrow: tomorrowTasks,
                 week: thisWeekTasks,
             },
             count: {
+                overdue: overdueTasks.length,
                 today: todayTasks.length,
                 tomorrow: tomorrowTasks.length,
                 week: thisWeekTasks.length,
