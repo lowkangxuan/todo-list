@@ -12,6 +12,8 @@ export function MainContent() {
                 return <UpcomingContent />;
             case "today":
                 return <TodayContent />;
+            case "overdue":
+                return;
             default:
                 return <ProjectContent id={activeTab} />;
         }

@@ -1,40 +1,54 @@
 import {useSetActiveTab} from "../../context/TabContext.jsx";
 import {useProject} from "../../context/ProjectContext.jsx";
 import {ContentHeading} from "./ContentHeading.jsx";
-import {Pencil, Plus, Save, Trash} from "lucide-react";
+import {ChevronRight, Pencil, Plus, Save, Trash, X} from "lucide-react";
 import {useEffect, useState} from "react";
+import {TaskEditor} from "./TaskEditor.jsx";
+import {TaskButton} from "./TaskButton.jsx";
 
 export function ProjectContent({id}) {
     const setActiveTab = useSetActiveTab();
     const {projects, dispatch} = useProject();
+
     const currProject = projects[id];
     const numOfTasks = Object.entries(currProject.tasks).length;
 
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditingProject, setIsEditingProject] = useState(false);
+    const [editingTaskId, setEditingTaskId] = useState(null);
     const [nameDraft, setNameDraft] = useState(currProject.name);
+
+    const taskData = currProject?.tasks?.[editingTaskId] ?? null;
+    const isOpen = !!taskData;
 
     useEffect(() => {
         if (!currProject) return;
 
-        setIsEditing(false);
+        setIsEditingProject(false);
+        setEditingTaskId(null);
         setNameDraft(currProject.name);
-        console.log("test");
-    }, [id, currProject]);
+    }, [id, currProject.name]);
 
     function enterEditMode() {
-        setIsEditing(true);
+        setIsEditingProject(true);
+    }
+
+    function startTaskEdit(taskID) {
+        setEditingTaskId(taskID);
+    }
+
+    function endTaskEdit() {
+        setEditingTaskId(null);
     }
 
     function saveDraft() {
-        console.log(nameDraft);
         dispatch({
             type: "EDIT_PROJECT",
             payload: {
-                id: id,
+                projectID: id,
                 newName: nameDraft,
             }
         })
-        setIsEditing(false);
+        setIsEditingProject(false);
     }
 
     function handleDraftInput(e) {
@@ -44,7 +58,9 @@ export function ProjectContent({id}) {
     function handleDelete() {
         dispatch({
             type: "DELETE_PROJECT",
-            payload: {id},
+            payload: {
+                projectID: id
+            },
         })
         setActiveTab("today");
     }
@@ -53,40 +69,98 @@ export function ProjectContent({id}) {
         dispatch({
             type: "CREATE_TASK",
             payload: {
-                id: id,
+                projectID: id,
             }
         })
     }
 
+    function handleTaskCompletion(e, taskID) {
+        dispatch({
+            type: "COMPLETE_TASK",
+            payload: {
+                projectID: id,
+                taskID: taskID,
+                markCompleted: e.target.checked,
+            }
+        })
+    }
+
+    function handleTaskSave(draft) {
+        dispatch({
+            type: "SAVE_TASK",
+            payload: {
+                projectID: id,
+                taskID: editingTaskId,
+                draft: draft,
+            }
+        })
+    }
+
+    function handleTaskDelete() {
+        dispatch({
+            type: "DELETE_TASK",
+            payload: {
+                projectID: id,
+                taskID: editingTaskId,
+            }
+        })
+        setEditingTaskId(null);
+    }
+
     return (
-        <div>
-            <div className="flex">
-                {isEditing
-                ? <input type="text" placeholder="Type new name" className="input" value={nameDraft} onChange={handleDraftInput} />
-                : <ContentHeading count={numOfTasks}>{currProject.name}</ContentHeading>}
-                <div className="flex gap-2 ml-auto">
-                    {isEditing
-                    ? <button className="btn btn-success" onClick={saveDraft}>
-                            <Save size={20} />Save
+        <div className="flex gap-4">
+            <div className="flex flex-col flex-1">
+                <div className="flex">
+                    {isEditingProject
+                        ? <input type="text" placeholder="Type new name" className="input" value={nameDraft}
+                                 onChange={handleDraftInput}/>
+                        : <ContentHeading count={numOfTasks}>{currProject.name}</ContentHeading>}
+                    <div className="flex gap-2 ml-auto">
+                        {isEditingProject
+                            ? <button className="btn btn-success" onClick={saveDraft}>
+                                <Save size={20}/>Save
+                            </button>
+                            : <button className="btn" onClick={enterEditMode}>
+                                <Pencil size={20}/>Edit Name
+                            </button>
+                        }
+                        <button className="btn btn-error" onClick={handleDelete}>
+                            <Trash size={20}/> Delete
                         </button>
-                    : <button className="btn" onClick={enterEditMode}>
-                            <Pencil size={20} />Edit Name
-                      </button>
-                    }
-                    <button className="btn btn-error" onClick={handleDelete}>
-                        <Trash size={20} /> Delete
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2 h-full">
+                    <button className="btn justify-start py-6" onClick={handleTaskCreation}><Plus/> Add
+                        New Task
                     </button>
+                    <div className="flex flex-col divide-y-2 divide-base-300 h-full">
+                        {numOfTasks === 0
+                            ? <div className="flex-1 text-center content-center text-2xl font-semibold text-base-content/40">You have currently no tasks for this project</div>
+                            : Object.values(currProject.tasks).map((task) => (
+                                <TaskButton key={task.id}
+                                            data={task}
+                                            onClick={() => startTaskEdit(task.id)}
+                                            onCheck={(e) => handleTaskCompletion(e, task.id)}
+                                >
+                                    {task.name}
+                                </TaskButton>
+                            ))}
+                    </div>
+
                 </div>
             </div>
 
-            <div className="flex flex-col mt-8">
-                <button className="btn btn-neutral btn-outline justify-start" onClick={handleTaskCreation}><Plus /> Add New Task</button>
-                {numOfTasks === 0
-                ? "No tasks were found!"
-                    : Object.values(currProject.tasks).map((task) => (
-                        <div key={task.id}>{task.name}</div>
-                    ))}
-            </div>
+            <aside
+                className={`
+                  overflow-hidden
+                  transition-all duration-300 ease-in-out
+                  ${isOpen ? "max-w-md opacity-100" : "max-w-0 opacity-0 pointer-events-none"}
+                `}
+            >
+                <TaskEditor taskData={taskData} onCloseEditor={endTaskEdit} onDelete={handleTaskDelete} onSave={handleTaskSave} />
+            </aside>
         </div>
+
     )
 }

@@ -12,7 +12,7 @@ export function SectionTab({id, icon, count, children, onClick}) {
     }
 
     return (
-        <button className={activeTab === id ? "menu-active" : ""} onClick={handleClick}>
+        <button className={`${activeTab === id ? "menu-active" : ""} font-medium`} onClick={handleClick}>
             {icon}
             {children}
             <span className="ml-auto">{count > 0 && count}</span>

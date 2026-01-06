@@ -17,7 +17,7 @@ export function ProjectSection() {
             {Object.entries(projects).map((project) => {
                 const id = project[0];
                 const data = project[1];
-                const numOfTasks = data.tasks.length;
+                const numOfTasks = Object.values(data.tasks).length;
 
                 return (
                     <li key={id}>

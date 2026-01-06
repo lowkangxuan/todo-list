@@ -1,6 +1,17 @@
-import {createContext, useContext, useReducer} from "react";
+import {createContext, useContext, useEffect, useReducer} from "react";
+import {addDays, format} from "date-fns";
 
 const ProjectProvider = createContext(null);
+
+function loadFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem("projects");
+        if (!raw) return {};
+        return JSON.parse(raw);
+    } catch {
+        return {};
+    }
+}
 
 function projectReducer(projects, action) {
     function projectTemplate() {
@@ -16,7 +27,8 @@ function projectReducer(projects, action) {
             id: crypto.randomUUID(),
             name: "Task",
             description: "",
-            dueDate: new Date(),
+            dueDate: "",
+            isCompleted: false,
         }
     }
 
@@ -43,45 +55,86 @@ function projectReducer(projects, action) {
         }
 
         case "EDIT_PROJECT": {
-            const {id, newName} = action.payload;
+            const {projectID, newName} = action.payload;
             return {
                 ...projects,
-                [id]: {
-                    ...projects[id],
+                [projectID]: {
+                    ...projects[projectID],
                     name: newName,
                 }
             };
         }
 
         case "DELETE_PROJECT": {
-            const {id} = action.payload;
-            if (!projects[id]) return projects;
+            const {projectID} = action.payload;
+            if (!projects[projectID]) return projects;
 
-            const { [id]: _, ...rest } = projects;
+            const { [projectID]: _, ...rest } = projects;
             return rest;
         }
 
         case "CREATE_TASK": {
-            const {id} = action.payload;
+            const {projectID} = action.payload;
             const newTask = taskTemplate();
 
             return {
                 ...projects,
-                [id]: {
-                    ...projects[id],
+                [projectID]: {
+                    ...projects[projectID],
                     tasks: {
-                        ...projects[id].tasks,
+                        ...projects[projectID].tasks,
                         [newTask.id]: newTask,
                     },
                 }
             };
         }
 
-        case "EDIT_TASK":
-            return;
+        case "SAVE_TASK": {
+            const {projectID, taskID, draft} = action.payload;
+            return {
+                ...projects,
+                [projectID]: {
+                    ...projects[projectID],
+                    tasks: {
+                        ...projects[projectID].tasks,
+                        [taskID]: draft,
+                    }
+                }
+            }
+        }
 
-        case "DELETE_TASK":
-            return;
+        case "DELETE_TASK": {
+            const {projectID, taskID} = action.payload;
+            const { [taskID]: _, ...rest } = projects[projectID].tasks;
+
+            return {
+                ...projects,
+                [projectID]: {
+                    ...projects[projectID],
+                    tasks: {
+                        ...rest,
+                    }
+                }
+            }
+        }
+
+        case "COMPLETE_TASK": {
+            const {projectID, taskID, markCompleted} = action.payload;
+
+            return {
+                ...projects,
+                [projectID]: {
+                    ...projects[projectID],
+                    tasks: {
+                        ...projects[projectID].tasks,
+                        [taskID]: {
+                            ...projects[projectID].tasks[taskID],
+                            isCompleted: markCompleted,
+                        }
+                    }
+                }
+            };
+        }
 
         default:
             console.error("Unknown action type: ", action.type);
@@ -90,7 +143,19 @@ function projectReducer(projects, action) {
 }
 
 export function ProjectContext({children}) {
-    const [projects, dispatch] = useReducer(projectReducer, {});
+    const [projects, dispatch] = useReducer(projectReducer, {}, loadFromLocalStorage);
+
+    useEffect(() => {
+        localStorage.setItem("projects", JSON.stringify(projects));
+    }, [projects]);
+
+    function completeTask(projectID, taskID, markCompleted) {
+        dispatch({
+            type: "COMPLETE_TASK",
+            payload: {projectID, taskID, markCompleted},
+        });
+    }
+
     return (
         <ProjectProvider value={{projects, dispatch}}>
             {children}
