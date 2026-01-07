@@ -1,6 +1,6 @@
 import {createContext, useContext} from "react";
 import {useProject} from "./ProjectContext.jsx";
-import {isBefore, isThisWeek, isToday, isTomorrow, parseISO} from "date-fns";
+import {isBefore, isThisWeek, isToday, isTomorrow, parseISO, startOfDay} from "date-fns";
 
 const TaskViewProvider = createContext(null);
 
@@ -16,19 +16,19 @@ function getAllTasks(projects) {
 
 function getOverdueTasks(allTasks) {
     return allTasks.filter(task => {
-        return task.dueDate && isBefore(parseISO(task.dueDate), new Date());
+        return !task.isCompleted && task.dueDate && isBefore(parseISO(task.dueDate), startOfDay(new Date()));
     })
 }
 
 function getTodayTasks(allTasks) {
     return allTasks.filter(task => {
-        return task.dueDate && isToday(parseISO(task.dueDate));
+        return !task.isCompleted && task.dueDate && isToday(parseISO(task.dueDate));
     })
 }
 
 function getTomorrowTasks(allTasks) {
     return allTasks.filter(task => {
-        return task.dueDate && isTomorrow(parseISO(task.dueDate));
+        return !task.isCompleted && task.dueDate && isTomorrow(parseISO(task.dueDate));
     })
 }
 
@@ -36,6 +36,7 @@ function getTomorrowTasks(allTasks) {
 function getThisWeekTasks(allTasks) {
     return allTasks.filter(task => {
         return (
+            !task.isCompleted &&
             task.dueDate &&
             !isToday(parseISO(task.dueDate)) &&
             !isTomorrow(parseISO(task.dueDate)) &&

@@ -10,7 +10,7 @@ export function GeneralSection() {
         <SectionList title="General">
             <li><SectionTab id="upcoming" icon={<ChevronsRight size="20" />} count={count.upcoming}>Upcoming</SectionTab></li>
             <li><SectionTab id="today" icon={<Calendar1 size="20" />} count={count.today}>Today</SectionTab></li>
-            <li><SectionTab id="overdue" icon={<ClockAlert size="20" />} count={count.today}>Overdue</SectionTab></li>
+            <li><SectionTab id="overdue" icon={<ClockAlert size="20" />} count={count.overdue}>Overdue</SectionTab></li>
         </SectionList>
     )
 }

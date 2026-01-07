@@ -2,6 +2,7 @@ import {createContext, useContext, useEffect, useReducer} from "react";
 import {addDays, format} from "date-fns";
 
 const ProjectProvider = createContext(null);
+const TaskProvider = createContext(null);
 
 function loadFromLocalStorage() {
     try {
@@ -157,8 +158,10 @@ export function ProjectContext({children}) {
     }
 
     return (
-        <ProjectProvider value={{projects, dispatch, completeTask}}>
-            {children}
+        <ProjectProvider value={{projects, dispatch}}>
+            <TaskProvider value={{completeTask}}>
+                {children}
+            </TaskProvider>
         </ProjectProvider>
     )
 }
@@ -166,5 +169,11 @@ export function ProjectContext({children}) {
 export function useProject() {
     const context = useContext(ProjectProvider);
     if (!context) throw new Error("useProject must be used within a ProjectContext");
+    return context;
+}
+
+export function useTask() {
+    const context = useContext(TaskProvider);
+    if (!context) throw new Error("useTask must be used within a ProjectContext");
     return context;
 }
